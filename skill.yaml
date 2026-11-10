@@ -1,0 +1,5 @@
+name: "misconception_diagnosis"
+title: "错题图谱诊断"
+description: "Turn one wrong answer into a diagnosis worksheet: reconstruct the child's reasoning chain, locate the broken edge on a two-layer knowledge graph (curriculum skeleton borrowed from cn-math-taxonomy + a misconception layer built per case), and generate one exam-format paper that repairs edges in dependency order, with a parent answer-and-branching guide."
+category: "Work and knowledge"
+include_in_prompt: true

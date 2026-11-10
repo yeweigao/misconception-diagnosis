@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+fonts/
+*.muse-github-snapshot-sync.json
