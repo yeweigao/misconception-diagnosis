@@ -1,61 +1,66 @@
 # 错题图谱诊断（misconception-diagnosis）
 
-把一道错题，做成一份能把病治好的卷子。
+读懂孩子做错的数学题。
 
-核心判断：**错题不是某个知识点不会，是知识图谱上有一条边断了、或者接错了。** 本 skill 还原孩子那条自洽但错误的推理链，找到断边，追到上游，再按图谱的依赖顺序出题，把边一条条补回去。
+孩子错一道题，很少是「这个知识点不会」，更常见的是他有一套自洽的做法，只是某处接错了。这个 skill 让 AI 从一张作业照片里还原那套做法，借课标知识图谱和误解研究定位接错的地方，出一张能把几种解释分开的诊断卷，并给每个孩子维护一份随证据更新的档案。
 
-三句话立住整套方法：证据定结论，图谱定内容，卷子定真假。
+## 一个循环
 
-## 方法（五步）
+1. **读**：从照片里读出孩子的想法，写成几条可检验的猜测。
+2. **测**：出一张卷子（学生卷 + 家长页），每道题都预先写下「如果是这样，他会答成什么」。
+3. **记**：把看到的、猜的、测出来的写进孩子的档案。卷子做完拍回来，再读一轮。
 
-1. **还原推理链**——先假设孩子的答案是自洽的，一节一节写出他的推理；归因只从答案与作答证据推（含「巧合检验」：错值恰好等于题中另一个正确量 = 角色错接，不是感知错误）。零作答、代笔答案各有读法。
-2. **骨架定位**——用 cn-math-taxonomy 定位知识点、达标标准与先修链，顺手查 Marble os-taxonomy 的教学研究作误解候选。
-3. **误解层建图**——在课标骨架下面补认知层：细过课标的节点、接错的边、跨界桥；一直追到能用实物当场验证的节点为止。
-4. **按图出卷**——范围由图谱定（本案节点的全部达标标准 + 直接先修，后继只在家长页交代衔接）；顺序由依赖与 CPA 定（情境 → 图示 → 抽象）；每卷必含撤支架探针、错题诊所、校验边、迁移 + 毕业题四种固定件；答案只住在独立家长页（附判读树与图谱覆盖表）。
-5. **判读与复测**——原题答对且能讲出理由，本案才关闭；新见的误解模式沉淀进题型库。
+卷子是实验，档案才是积累。档案的核心是关于孩子的猜测：每条带着支持和反对它的证据、当前状态、下一步怎么测。错题本和知识点掌握情况都是它的不同视图。
 
-双源分工：cn-math-taxonomy 管骨架（课标定位、达标标准、先修链、题库，到高中），Marble os-taxonomy 管误解参考（commonMisconceptions、表征层节点）；误解层逐案现场建。两源各自看不见什么，见 `references/taxonomy-source.md`。
+三句话撑着整件事：证据定结论，图谱定内容，卷子定真假。
 
 ## 仓库结构
 
 | 路径 | 是什么 |
 |---|---|
-| `SKILL.md` | 方法本体：三条立论、证据读法、三层图谱、五步、交付自查、红线 |
-| `references/question-patterns.md` | 题型库：补边的七种构造、判读树写法、已见误解模式 |
+| `SKILL.md` | 给 AI 的说明：怎么读、怎么用图谱、怎么出卷、怎么记，以及几条不做的事 |
+| `references/question-patterns.md` | 前几案用过的题型构造和已见的误解模式（想法库，不是配方） |
+| `references/learner-record.md` | 孩子档案的格式 |
 | `references/taxonomy-source.md` | 两个图谱来源：怎么查、许可、可信度、各自的盲区 |
 | `scripts/taxonomy_lookup.py` | 查图谱：两个来源，一套查法 |
-| `scripts/paperkit.mjs` | 出卷骨架：图谱覆盖、分值配平、答案分区在构建时强制 |
-| `scripts/check_pdf.py` | 出卷 QA：逐页充实度 |
-| `examples/` | 两个完整范例 |
+| `scripts/paperkit.mjs` | 出卷：答案只进家长页、图谱落点、溢出检查在构建时把关；计分可选 |
+| `scripts/learner.py` | 孩子档案：看档案、看错题本、合并新记录 |
+| `scripts/learner_map.py` | 知识地图：把档案里的节点状态投到课标图上、推断一圈、画成 HTML |
+| `examples/` | 三个已结案的案例（也是 paperkit 的回归测试） |
 
 ## 快速开始
 
-图谱数据不随仓库分发，先克隆两个数据源（也可用环境变量 `CNMT_DATA` / `MARBLE_DATA` 指定其他位置）：
+图谱数据不随仓库分发，先克隆两个数据源（也可以用环境变量 `CNMT_DATA` / `MARBLE_DATA` 指定其他位置）：
 
 ```bash
 git clone https://github.com/xiaoyang111222/cn-math-taxonomy ~/workspace/.cn-math-taxonomy
 git clone https://github.com/withmarbleapp/os-taxonomy ~/workspace/.os-taxonomy
 ```
 
-查一个知识点及其先修链、误解候选：
+查一个知识点的先修链、后继和误解研究：
 
 ```bash
 python3 scripts/taxonomy_lookup.py 认识几分之一 --chain --next
 python3 scripts/taxonomy_lookup.py --source marble --research "fractions on a number line"
 ```
 
-出卷（Node + 本地 KaTeX + 本机 Chromium，全程离线；KaTeX 默认在 `~/workspace/tools/katex/`，可用 `KATEX_DIR` 另指）并检查逐页充实度（依赖 poppler 的 `pdftoppm` 与 Pillow）：
+出卷需要 Node、本地 KaTeX（默认在 `~/workspace/tools/katex/`，可用 `KATEX_DIR` 另指）和本机 Chromium，全程离线：
 
 ```bash
 node examples/unit-fraction-extremum/build_worksheet.mjs
-python3 scripts/check_pdf.py examples/unit-fraction-extremum/worksheet.pdf
 ```
 
-然后让你的 AI 按 `SKILL.md` 的五步执行。两个范例分工：`examples/fraction-1-11/` 管深度（一案到底，追到实物层）；`examples/unit-fraction-extremum/` 管宽度与新证据形态（零作答 + 家长代笔、按图谱全貌出卷）。两份出卷脚本都是新案例的模板：前者是长卷写法，后者是短卷写法。
+孩子档案默认放在 `~/Documents/错题图谱/<孩子>/`（可用 `MD_LEARNERS` 另指），不在仓库里：
+
+```bash
+python3 scripts/learner.py show <孩子>
+python3 scripts/learner.py book <孩子>
+python3 scripts/learner.py map <孩子>     # 写出 <孩子>/知识地图.html
+```
 
 ## 许可与数据来源
 
 - 本 skill 的文本与脚本：MIT。
 - cn-math-taxonomy：CC BY-NC 4.0（商用需另行授权），© 其作者。
-- Marble os-taxonomy：图数据 ODbL 1.0、文本 CC BY-SA 4.0；引用其误解/教学文本须署名并以相同许可分发。
-- 范例中的孩子作答照片与成品试卷按隐私边界未随仓库发布，见各范例目录的 `README.md`。
+- Marble os-taxonomy：图数据 ODbL 1.0、文本 CC BY-SA 4.0；引用其误解或教学文本须署名，并以相同许可分发。
+- 孩子的作答照片、成品试卷和档案都不进仓库，见各范例目录的 `README.md`。

@@ -1,12 +1,12 @@
 // paperkit —— 出卷骨架。规矩由结构承重，不靠出卷人的记性：
 //
 //   图谱定内容   graph() 声明节点，section() 标出处。节点没有落点、大题没有出处，构建即失败。
-//   分值配平     每题报分，大题小计与全卷总分由骨架求和。不等于满分，构建即失败。
+//   分值         可选。meta.full 给了满分，每题就得报分、合计必须等于满分；不给就不计分。
 //   答案分区     答案只进登记簿，只有家长页取得出来。学生卷上没有放答案的地方。
 //   排版         KaTeX 本地 SSR + SVG + HTML/CSS，无头 Chromium 打印，全程离线。
 //
 // 答案同源（答案是题目参数的函数）由出卷脚本自己保证：ans 里写算式，不写数。
-// 写法照 examples/ 下两份 build_worksheet.mjs。
+// examples/ 下的脚本是调用示例；卷子结构由本案诊断决定，不照搬。
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -40,6 +40,8 @@ export const fracBox = (a = 1) => tex(`\\dfrac{${a}}{\\boxed{\\phantom{0}}}`);
 export const fracBlank = () => tex("\\dfrac{\\boxed{\\phantom{0}}}{\\boxed{\\phantom{0}}}");
 
 export const blank = (width = "3em") => `<span class="blank" style="min-width:${width}"></span>`;
+/** 比大小用的空圆圈：孩子在里面填 ＞ ＜ ＝。 */
+export const circle = () => `<span class="circle"></span>`;
 export const note = (text) => `<span class="note">${text}</span>`;
 export const big = (html) => `<span class="big">${html}</span>`;
 export const candidates = (values) => `<span class="cands">${values.join(" ")}</span>`;
@@ -141,10 +143,10 @@ export class Paper {
    *   numbering   "section"（默认，每道大题内（1）（2）…）| "paper"（全卷 1. 2. 3. 连续编号）
    *   scoreTable  长卷：信息栏改为 班级/姓名/座号，并按大题生成得分表
    *   gap         每道题后面的留白（毫米），调全卷松紧用，默认 0
-   *   full        满分，默认 100
+   *   full        满分。给了就计分并配平；不给（默认）卷面不出现分数
    */
   constructor(meta) {
-    this.#meta = { full: 100, numbering: "section", scoreTable: false, gap: 0, ...meta };
+    this.#meta = { full: null, numbering: "section", scoreTable: false, gap: 0, ...meta };
   }
 
   // ── 图谱：出卷目录从这里来 ──
@@ -162,7 +164,8 @@ export class Paper {
     const section = { title, nodes, note, questions: [] };
     const index = this.#sections.push(section) - 1;
     this.#student.push(() => {
-      const points = [note, `共 ${sum(section.questions.map((q) => q.pts))} 分`].filter(Boolean).join("，");
+      const total = this.#scored ? `共 ${sum(section.questions.map((q) => q.pts))} 分` : null;
+      const points = [note, total].filter(Boolean).join("，");
       return `<div class="sec"><span>${numeral(index)}、${title}</span><span class="pts">${points}</span></div>` +
         (intro ? `<div class="intro">${intro}</div>` : "");
     });
@@ -170,8 +173,8 @@ export class Paper {
   }
 
   /**
-   * 一道题。pts 是分值，ans 是家长页上的答案（必须有）。
-   * 题干里的 {分} 换成「（n 分）」；后续各行缩进排在题干下；air 是各行之间额外的留白（毫米）。
+   * 一道题。ans 是家长页上的答案（必须有）；pts 是分值，计分卷才要。
+   * 题干里的 {分} 在计分卷上换成「（n 分）」，不计分时删去；后续各行缩进排在题干下；air 是各行之间额外的留白（毫米）。
    */
   q({ pts, ans, air = 0 }, stem, ...lines) {
     const section = this.#sections.at(-1);
@@ -181,7 +184,7 @@ export class Paper {
     section.questions.push(question);
     this.#student.push(() => {
       const gap = air ? ` style="margin-bottom:${air}mm"` : "";
-      return `<div class="item">${this.#label(question)}${stem.replace("{分}", `（${pts} 分）`)}</div>` +
+      return `<div class="item">${this.#label(question)}${stem.replace("{分}", this.#scored ? `（${pts} 分）` : "")}</div>` +
         lines.map((html) => `<div class="item indent"${gap}>${html}</div>`).join("");
     });
     if (this.#meta.gap) this.space(this.#meta.gap);
@@ -242,12 +245,15 @@ export class Paper {
     }
     const count = (kind) => pages.filter((page) => page.kind === kind).length;
     console.table({
-      总分: sum(this.#questions().map((q) => q.pts)),
-      大题: this.#sections.map((s, i) => `${numeral(i)} ${sum(s.questions.map((q) => q.pts))}`).join(" / "),
+      ...(this.#scored && { 总分: sum(this.#questions().map((q) => q.pts)) }),
+      大题: this.#sections.map((s, i) => `${numeral(i)} ${s.questions.length} 题` +
+        (this.#scored ? ` ${sum(s.questions.map((q) => q.pts))} 分` : "")).join(" / "),
       页数: `学生卷 ${count("student")} + 家长页 ${count("parent")}`,
       输出: pdf ?? `${base}.html（没找到 Chromium，PDF 未打印：用环境变量 CHROME 指定浏览器后重跑）`,
     });
   }
+
+  get #scored() { return this.#meta.full != null; }
 
   #questions() { return this.#sections.flatMap((section) => section.questions); }
 
@@ -258,9 +264,11 @@ export class Paper {
   }
 
   #inspect() {
-    const { full } = this.#meta;
-    const total = sum(this.#questions().map((q) => q.pts));
-    if (total !== full) throw new Error(`分值不平：各题合计 ${total} 分，应为 ${full} 分。`);
+    if (this.#scored) {
+      const { full } = this.#meta;
+      const total = sum(this.#questions().map((q) => q.pts ?? NaN));
+      if (total !== full) throw new Error(`分值不平：各题合计 ${total} 分，应为 ${full} 分（计分卷每题都要报分）。`);
+    }
     for (const [i, section] of this.#sections.entries()) {
       if (!section.nodes.length) throw new Error(`第${numeral(i)}大题没有标图谱出处（nodes）。`);
       for (const id of section.nodes) {
@@ -290,7 +298,7 @@ export class Paper {
       ? `<span>班级 __________　姓名 __________　座号 ______</span>` +
         `<table class="score"><tr>${columns.map((c) => `<th>${c}</th>`).join("")}</tr>` +
         `<tr>${columns.map(() => "<td></td>").join("")}</tr></table>`
-      : `<span>姓名 ____________</span><span>用时 ______ 分钟</span><span><b>满分 ${full}</b></span>`;
+      : `<span>姓名 ____________</span><span>用时 ______ 分钟</span>` + (full != null ? `<span><b>满分 ${full}</b></span>` : "");
     return `<div class="eyebrow">${eyebrow}</div><h1 class="title">${title}</h1>` +
       (subtitle ? `<div class="subtitle">${subtitle}</div>` : "") +
       `<div class="route">${route}</div><div class="inforow">${info}</div><div class="rule2"></div>`;
@@ -376,6 +384,7 @@ table.score th, table.score td { border: 0.8px solid ${INK}; width: 9.5mm; heigh
 .item .katex { font-size: 1.06em; }
 .indent { margin-left: 7mm; }
 .blank { display: inline-block; border-bottom: 1.4px solid ${INK}; height: 1em; }
+.circle { display: inline-block; width: 7mm; height: 7mm; border: 1.2px solid ${INK}; border-radius: 50%; vertical-align: middle; margin: 0 1.6mm; }
 .note { font-family: ${SANS}; font-size: 9pt; color: ${GREY}; }
 .big { font-size: 11.5pt; }
 .cands { font-size: 12.5pt; letter-spacing: 6px; }

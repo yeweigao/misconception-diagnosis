@@ -42,7 +42,7 @@ const finale = { n: 10, stars: [4, 9] };
 
 // ───────── 图谱：出卷目录 ─────────
 
-const P = new Paper({
+const P = new Paper({ full: 100,
   eyebrow: "小学数学 · 分数专项训练卷",
   title: "一份到底是多少",
   subtitle: "—— 从尺子到数轴 ——",

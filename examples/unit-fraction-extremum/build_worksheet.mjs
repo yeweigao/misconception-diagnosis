@@ -39,7 +39,7 @@ const final = { den: 7, nums: [3, 5] };         // 毕业复测第三问
 
 // ───────── 图谱：出卷目录 ─────────
 
-const P = new Paper({
+const P = new Paper({ full: 100,
   eyebrow: "小学数学 · 错题探针与补强（分数大小比较）",
   title: "比大小，先看谁说了算",
   route: "先探一探 → 分母说了算 → 反着填 → 分子说了算 → 防串线 → 错题诊所 → 毕业复测",
