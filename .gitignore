@@ -2,3 +2,14 @@ __pycache__/
 *.pyc
 fonts/
 *.muse-github-snapshot-sync.json
+/Claude outputs
+
+# 范例目录只收案例记录与出卷脚本；出卷产物与孩子的原始素材不入库
+examples/*/worksheet.html
+examples/*/worksheet.pdf
+examples/*/original-photo.*
+examples/*/render/
+
+# 本地试跑，不是范例
+/examples/unit-fraction-1-4/
+/examples/fraction-1-11/CASE-1.md

@@ -1,8 +1,12 @@
 # 范例说明
 
-本目录是 SKILL.md 五步流程的完整一案（CASE.md），含出卷脚本 `build_worksheet.py`。
+本目录是 SKILL.md 五步流程的完整一案（`CASE.md`），含出卷脚本 `build_worksheet.mjs`——`scripts/paperkit.mjs` 的长卷写法（得分表、全卷连续题号、数轴与尺子）。
 
-按发布边界，以下两件**不在公开仓库内**：
+按发布边界，以下内容**不在公开仓库内**：
 
 - `original-photo.jpg`——家长发来的孩子作答照片（未成年人素材，不公开）；
-- `worksheet.pdf`——终版试卷成品。需要时运行 `build_worksheet.py` 自行生成：先把 Noto Sans SC 与 Noto Serif SC 字体放入同目录的 `fonts/` 子目录（脚本从自身目录找字体；注意可变字体须先实例化到常规字重，默认实例是 Thin）。
+- `worksheet.html`、`worksheet.pdf`——出卷产物。
+
+自行生成试卷：准备好 KaTeX（放在 `~/workspace/tools/katex/`，或用环境变量 `KATEX_DIR` 指向它），运行 `node build_worksheet.mjs`，再用仓库根目录的 `scripts/check_pdf.py worksheet.pdf` 检查逐页充实度。构建会先过检：图谱覆盖、分值配平、答案分区、页面溢出，任何一项不过都会报错并说明原因。
+
+读脚本的顺序：图谱（出卷目录）→ 参数（答案都从它们算出）→ 顺着卷面往下。

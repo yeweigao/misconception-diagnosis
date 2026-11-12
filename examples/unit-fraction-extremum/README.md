@@ -1,15 +1,16 @@
 # 范例说明
 
-本目录是 SKILL.md 五步流程的第二案（CASE.md），含出卷脚本 `build_worksheet.mjs`（KaTeX 排版链）。
+本目录是 SKILL.md 五步流程的第二案（`CASE.md`），含出卷脚本 `build_worksheet.mjs`——`scripts/paperkit.mjs` 的标准写法，新案例照它写。
 
 按发布边界，以下内容**不在公开仓库内**：
 
 - 孩子作答的原始照片（未成年人素材，不公开）；
-- `worksheet.pdf`——终版试卷成品。
+- `worksheet.html`、`worksheet.pdf`——出卷产物。
 
-需要自行生成试卷时：
+自行生成试卷：
 
-1. 准备 KaTeX（一次下载，之后离线）：把 KaTeX 发行包放到本地任意位置，并把 `build_worksheet.mjs` 开头 import 的路径改到该位置的 `katex.min.js`；脚本生成的 HTML 还会按同一目录引用 `katex.min.css` 与 `fonts/`。
-2. 运行 `node build_worksheet.mjs`，得到 `probe4.html`（图形由参数生成 SVG，答案由同一组参数算出）。
-3. 用无头 Chromium 打印成 PDF：`chrome --headless --no-sandbox --print-to-pdf=worksheet.pdf --no-pdf-header-footer file://…/probe4.html`。
-4. 用仓库根目录的 `scripts/check_pdf.py` 检查逐页充实度。
+1. 准备 KaTeX（一次下载，之后离线）：把发行包（`katex.min.js`、`katex.min.css`、`fonts/`）放到 `~/workspace/tools/katex/`，或用环境变量 `KATEX_DIR` 指向它。
+2. 运行 `node build_worksheet.mjs`。构建先过三道检查（图谱覆盖、分值配平、答案分区），任何一道不过都会报错并指出是哪一题、哪个节点；通过后写出 `worksheet.html`，并用本机 Chromium 打印 `worksheet.pdf`（找不到浏览器时，用环境变量 `CHROME` 指定其路径）。
+3. 用仓库根目录的 `scripts/check_pdf.py worksheet.pdf` 检查逐页充实度，再逐页看渲染图。
+
+读脚本的顺序：图谱（出卷目录）→ 参数（答案都从它们算出）→ 顺着卷面往下。

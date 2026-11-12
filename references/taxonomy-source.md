@@ -9,7 +9,7 @@
 - 图谱浏览：https://math.pansgo.com/explore/
 - 许可：**CC BY-NC 4.0**——个人学习、教学、研究免费；商业使用（付费课程、付费 App、机构收费服务）需向作者单独授权。产物若涉商用，先向用户说明。
 - 规模（2026-11-10 查证）：数学 870 个知识点（小学 284 / 初中 315 / 高中 271）、数学先修边 1459+ 条、数学题库 3627 道；对齐人教版教材目录 + 《义务教育数学课程标准（2022 年版）》。
-- 数据：`data/topics.json`（id/name/grade/chapter/description/mastery_criteria/diagnostic_question/standards）、`data/dependencies.json`（topicId/prerequisiteId/strength=hard|soft/reason）、`data/questions.json`（每点约 2 道，带答案与核验式）。
+- 数据：`data/topics.json`（id/name/grade/chapter/description/mastery_criteria/diagnostic_question/standards；其中 mastery_criteria 是出卷范围的第一圈，脚本以「达标标准」列出）、`data/dependencies.json`（topicId/prerequisiteId/strength=hard|soft/reason）、`data/questions.json`（每点 4–5 道，分 basic / standard / challenge 档，带答案、解析与核验式；脚本列前 3 道）。
 - 克隆：`git clone --depth 1 https://github.com/xiaoyang111222/cn-math-taxonomy ~/workspace/.cn-math-taxonomy`
 - 用法定位：节点 id 与册次写进案例记录；hard 先修链是出题顺序的上限参考；题库可借作骨架层探针（测「技能会不会」），不能当误解层探针（理由见「看不见什么」）。
 

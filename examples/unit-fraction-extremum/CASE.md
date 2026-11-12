@@ -40,4 +40,4 @@
 
 ## 状态
 
-卷子已交付（2026-11-11），待孩子作答后按判读树闭环。出卷脚本 `build_worksheet.mjs`（KaTeX 链：Node SSR + SVG + 无头 Chromium；KaTeX 资产需在 `~/workspace/tools/katex/`，见 SKILL.md 的 QA 条）。
+卷子已交付（2026-11-11），待孩子作答后按判读树闭环。出卷脚本 `build_worksheet.mjs` 是 `scripts/paperkit.mjs` 的标准写法：先声明图谱节点，再顺着卷面出题，答案全部由参数算出；图谱覆盖、分值配平、答案分区在构建时强制（KaTeX 链与资产位置见 SKILL.md 的交付自查）。
