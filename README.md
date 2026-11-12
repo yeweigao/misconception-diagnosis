@@ -21,11 +21,13 @@
 | `SKILL.md` | 给 AI 的说明：怎么读、怎么用图谱、怎么出卷、怎么记，以及几条不做的事 |
 | `references/question-patterns.md` | 前几案用过的题型构造和已见的误解模式（想法库，不是配方） |
 | `references/learner-record.md` | 孩子档案的格式 |
+| `references/dashboard.md` | live 档案（3D 知识图谱工作台）：图里有什么、能做什么、为什么这样设计 |
 | `references/taxonomy-source.md` | 两个图谱来源：怎么查、许可、可信度、各自的盲区 |
 | `scripts/taxonomy_lookup.py` | 查图谱：两个来源，一套查法 |
 | `scripts/paperkit.mjs` | 出卷：答案只进家长页、图谱落点、溢出检查在构建时把关；计分可选 |
 | `scripts/learner.py` | 孩子档案：看档案、看错题本、合并新记录 |
 | `scripts/learner_map.py` | 知识地图：把档案里的节点状态投到课标图上、推断一圈、画成 HTML |
+| `scripts/dashboard.py` + `scripts/dashboard/` | live 档案：整份数学图谱的 3D 工作台（单文件 HTML，离线可开） |
 | `examples/` | 三个已结案的案例（也是 paperkit 的回归测试） |
 
 ## 快速开始
@@ -56,6 +58,7 @@ node examples/unit-fraction-extremum/build_worksheet.mjs
 python3 scripts/learner.py show <孩子>
 python3 scripts/learner.py book <孩子>
 python3 scripts/learner.py map <孩子>     # 写出 <孩子>/知识地图.html
+python3 scripts/learner.py dashboard <孩子>  # 写出 <孩子>/知识图谱.html（live 档案，add 后自动刷新）
 ```
 
 ## 许可与数据来源

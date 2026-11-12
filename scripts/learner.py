@@ -20,8 +20,10 @@
   learner.py book <孩子>                 错题本：按时间看每次交来的作业
   learner.py add  <孩子> <batch.json>    合并一批新记录（格式见 references/learner-record.md）
   learner.py map  <孩子>                 知识地图：节点状态投到课标图上，写出 <孩子>/知识地图.html
+  learner.py dashboard <孩子>            live 档案：整份数学图谱的 3D 工作台，写出 <孩子>/知识图谱.html
   learner.py path <孩子>                 打印档案目录
 
+add 之后会自动刷一遍 live 档案（刷不上只报一声，不挡写档；手动刷用 dashboard）。
 档案放在 $MD_LEARNERS（默认 ~/Documents/错题图谱）/<孩子>/ 下，不进 skill 仓库。
 """
 
@@ -225,13 +227,27 @@ def book(record: dict) -> str:
     return "\n".join(lines)
 
 
+def refresh_dashboard(child: str) -> None:
+    """add 之后顺手刷 live 档案。刷不上只报一声：档案已经落盘，页面可以手动再刷。"""
+    try:
+        from dashboard import build_dashboard
+        build_dashboard(child, verbose=False)
+        print("  知识图谱已刷新")
+    except Exception as error:  # noqa: BLE001 — 任何原因都不能挡写档
+        print(f"  （知识图谱没刷上：{error}，跑 learner.py dashboard {child} 手动刷）")
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) < 3 or argv[1] not in ("show", "book", "add", "map", "path"):
+    if len(argv) < 3 or argv[1] not in ("show", "book", "add", "map", "dashboard", "path"):
         print(__doc__)
         return 2
     command, child = argv[1], argv[2]
     if command == "path":
         print(folder(child))
+        return 0
+    if command == "dashboard":
+        from dashboard import build_dashboard
+        build_dashboard(child)
         return 0
     record = load(child)
     if command == "show":
@@ -258,6 +274,7 @@ def main(argv: list[str]) -> int:
             return 1
         print(f"写入 {save(child, record)}")
         print("\n".join(f"  {d}" for d in done))
+        refresh_dashboard(child)
     return 0
 
 

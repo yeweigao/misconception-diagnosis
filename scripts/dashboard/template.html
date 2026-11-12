@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>__CHILD__ 的知识图谱 · 错题图谱工作台</title>
+<style>
+:root{
+  --bg:#04050d; --panel:rgba(10,14,30,.78); --panel2:rgba(16,22,44,.85);
+  --line:rgba(255,255,255,.09); --ink:#e8ecf6; --mute:#8b93ad; --dim:#5c6379;
+  --cyan:#6ee7ff; --violet:#a78bfa; --mint:#2fe8a8; --amber:#ffb020; --red:#ff5148;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei",system-ui,sans-serif;}
+#scene{position:fixed;inset:0}
+#scene canvas{display:block}
+.vignette{position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, transparent 55%, rgba(2,3,10,.55) 100%);}
+header{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;
+  padding:18px 20px 0;pointer-events:none;z-index:5}
+header .ttl{pointer-events:auto}
+h1{font-size:21px;font-weight:700;letter-spacing:.06em}
+h1 b{color:var(--cyan);font-weight:700}
+.sub{font-size:12px;color:var(--mute);margin-top:3px;letter-spacing:.08em}
+.stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;pointer-events:auto}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:6px 12px;
+  font-size:12.5px;backdrop-filter:blur(8px);white-space:nowrap}
+.chip b{font-size:14px;margin-right:2px}
+.chip .mint{color:var(--mint)} .chip .red{color:var(--red)} .chip .amber{color:var(--amber)} .chip .cyan{color:var(--cyan)}
+#panel{position:fixed;left:20px;top:86px;bottom:20px;width:328px;z-index:6;display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(12px);overflow:hidden}
+#panel .head{padding:13px 14px 10px;border-bottom:1px solid var(--line)}
+#search{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:8px;
+  color:var(--ink);font-size:13.5px;padding:8px 10px;outline:none}
+#search::placeholder{color:var(--dim)}
+#suggest{position:relative}
+#suggest ul{list-style:none;position:absolute;left:0;right:0;top:4px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:8px;overflow:hidden;display:none;z-index:20}
+#suggest li{padding:8px 10px;font-size:13px;cursor:pointer;border-top:1px solid rgba(255,255,255,.05)}
+#suggest li:first-child{border-top:none}
+#suggest li:hover{background:rgba(110,231,255,.12)}
+#suggest li small{color:var(--mute);margin-left:6px}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.fbtn{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:16px;color:var(--mute);
+  font-size:12px;padding:5px 10px;cursor:pointer}
+.fbtn.on{background:rgba(110,231,255,.16);border-color:rgba(110,231,255,.45);color:var(--ink)}
+.toggles{display:flex;gap:14px;margin-top:9px;font-size:12px;color:var(--mute)}
+.toggles label{cursor:pointer;display:flex;align-items:center;gap:5px}
+.toggles input{accent-color:var(--cyan)}
+#body{flex:1;overflow-y:auto;padding:12px 14px 16px}
+#body::-webkit-scrollbar{width:5px}
+#body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
+.sec{font-size:11px;letter-spacing:.14em;color:var(--dim);margin:14px 0 7px}
+.sec:first-child{margin-top:0}
+.legend{display:flex;flex-wrap:wrap;gap:5px 12px;font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+#detail{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+#detail .nm{font-size:16px;font-weight:700}
+#detail .meta{font-size:12px;color:var(--mute);margin-top:3px;line-height:1.6}
+.badge{display:inline-block;font-size:11.5px;border-radius:5px;padding:2px 7px;margin-top:7px;font-weight:600}
+.badge.red{background:rgba(255,81,72,.18);color:#ff8a82}
+.badge.amber{background:rgba(255,176,32,.16);color:#ffcf7d}
+.badge.mint{background:rgba(47,232,168,.14);color:#7df0c2}
+.badge.grey{background:rgba(255,255,255,.07);color:var(--mute)}
+#detail .ev{font-size:12.5px;color:var(--mute);margin-top:8px;line-height:1.7}
+#detail .ev b{color:var(--ink);font-weight:600}
+#detail .btns{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.abtn{background:rgba(110,231,255,.13);border:1px solid rgba(110,231,255,.35);color:#c9f4ff;
+  font-size:12px;border-radius:7px;padding:5px 9px;cursor:pointer}
+.abtn:hover{background:rgba(110,231,255,.22)}
+.abtn.ghost{background:rgba(255,255,255,.05);border-color:var(--line);color:var(--mute)}
+#detail .empty{color:var(--dim);font-size:13px;line-height:1.7}
+.bel{border-top:1px solid rgba(255,255,255,.06);padding:8px 2px;cursor:pointer}
+.bel:first-child{border-top:none}
+.bel .st{font-size:11px;border-radius:4px;padding:1px 6px;margin-right:6px;font-weight:600}
+.st.猜测{background:rgba(255,255,255,.08);color:var(--mute)}
+.st.有支持{background:rgba(255,176,32,.16);color:#ffcf7d}
+.st.测实{background:rgba(255,81,72,.18);color:#ff8a82}
+.st.推翻,.st.已解决{background:rgba(47,232,168,.14);color:#7df0c2}
+.bel .cl{font-size:13px;line-height:1.55}
+.bel .nx{font-size:12px;color:var(--mute);margin-top:3px}
+.bel.sel{background:rgba(110,231,255,.08);border-radius:6px}
+.exp{font-size:12.5px;color:var(--mute);line-height:1.6;padding:5px 2px;border-top:1px solid rgba(255,255,255,.06)}
+.exp:first-child{border-top:none}
+.exp b{color:var(--ink);font-weight:600}
+#tip{position:fixed;pointer-events:none;background:rgba(8,11,24,.92);border:1px solid var(--line);
+  border-radius:8px;padding:7px 10px;font-size:12.5px;display:none;z-index:30;max-width:280px}
+#tip .t{font-weight:700}
+#tip .s{color:var(--mute);font-size:11.5px;margin-top:1px}
+#hint{position:fixed;right:20px;bottom:16px;font-size:12px;color:var(--dim);z-index:5;text-align:right;line-height:1.7}
+#togglePanel{position:fixed;left:20px;bottom:16px;z-index:7;background:var(--panel);border:1px solid var(--line);
+  color:var(--ink);border-radius:20px;padding:7px 14px;font-size:12.5px;cursor:pointer;backdrop-filter:blur(8px);display:none}
+#hidePanel{display:none}
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:40;
+  background:var(--bg);color:var(--mute);font-size:14px;letter-spacing:.2em;transition:opacity .6s}
+@media (max-width:760px){
+  header{padding:12px 12px 0;flex-direction:column;gap:8px}
+  h1{font-size:17px}
+  .stats{display:flex;justify-content:flex-start}
+  .chip{padding:4px 9px;font-size:11.5px}
+  #panel{left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:46vh}
+  #hint{display:none}
+  #togglePanel{display:none;left:10px;bottom:10px}
+  #panel.hidden + #togglePanel{display:block}
+  #panel.hidden{transform:translateY(calc(100% + 12px))}
+  #panel{transition:transform .3s}
+  #hidePanel{display:block;position:absolute;top:10px;right:10px;background:rgba(255,255,255,.06);
+    border:1px solid var(--line);color:var(--mute);border-radius:14px;padding:4px 10px;font-size:11.5px;cursor:pointer}
+  #suggest{margin-right:66px}
+}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div class="vignette"></div>
+<div id="loading">点 亮 知 识 图 谱 …</div>
+<header>
+  <div class="ttl">
+    <h1>__CHILD__ 的<b>知识图谱</b></h1>
+    <div class="sub">错题图谱 · 工作台 — CN-MATH 数学全图 · __DATE__ 更新</div>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+<aside id="panel">
+  <div class="head">
+    <button id="hidePanel">收起 ✕</button>
+    <div id="suggest">
+      <input id="search" placeholder="搜节点：比如「分数比大小」" autocomplete="off">
+      <ul id="slist"></ul>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="toggles">
+      <label><input type="checkbox" id="tglLabels" checked> 节点名</label>
+      <label><input type="checkbox" id="tglEdges" checked> 连线</label>
+      <label><input type="checkbox" id="tglSpin" checked> 缓慢旋转</label>
+    </div>
+  </div>
+  <div id="body">
+    <div class="sec">图 例</div>
+    <div class="legend" id="legend"></div>
+    <div class="sec">选中的节点</div>
+    <div id="detail"><div class="empty">点击图里的任意一个点，看它是什么状态、有什么证据。<br>红点是已经确认有问题的地方，琥珀色是还存疑的，薄荷绿是已经会的，暗灰色是还没碰过的。</div></div>
+    <div class="sec">关于她的猜测（点一条，高亮它挂的节点）</div>
+    <div id="beliefs"></div>
+    <div class="sec">待收回的卷子</div>
+    <div id="exps"></div>
+    <div class="sec">说 明</div>
+    <div style="font-size:12px;color:var(--mute);line-height:1.8">
+      图是 cn-math-taxonomy 的数学全图（870 个课标节点＋先修边），按年级从下往上排，紫色的是课标以下的认知节点。<br>
+      实心亮点是亲眼看到的；暗一点的薄荷绿 / 琥珀 / 淡红是推断的——只是提示，不进档案。<br>
+      每次档案更新后重新生成这一页，位置不变，亮起来的地方会越来越多。
+    </div>
+  </div>
+</aside>
+<button id="togglePanel">面板</button>
+<div id="tip"><div class="t"></div><div class="s"></div></div>
+<div id="hint">拖动旋转 · 滚轮缩放 · 点击节点查看<br>双击空白处回到全图</div>
+<!--DATA-->
+<!--BUNDLE-->
+</body>
+</html>

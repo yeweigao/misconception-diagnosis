@@ -1,0 +1,1 @@
+{"description":"live 档案（3D 知识图谱工作台）的前端：Three.js 应用源码与打包脚本。只在改了 app.js 之后用；平时用 dashboard.py 就够了，不需要 Node。","devDependencies":{"esbuild":"0.28.2","three":"0.187.0"},"name":"misconception-dashboard","private":true,"scripts":{"build":"esbuild app.js --bundle --minify --format=iife --outfile=dashboard.bundle.js"},"version":"1.0.0"}
